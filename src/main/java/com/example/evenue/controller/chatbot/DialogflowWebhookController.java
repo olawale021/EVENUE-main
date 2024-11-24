@@ -93,8 +93,8 @@ public class DialogflowWebhookController {
         // Replace non-breaking spaces with regular spaces
         eventName = eventName.replace("\u00A0", " ");
 
-        // Log the event name to debug
-        System.out.println("Event name received (normalized): " + eventName);
+        // Print the event name after normalization
+        System.out.println("Normalized event name: " + eventName);
 
         // Find event by name (case-insensitive search)
         Optional<EventModel> eventOpt = eventService.findByEventName(eventName);

@@ -7,6 +7,7 @@ import com.example.evenue.models.tickets.TicketTypeDao;
 import com.example.evenue.models.users.UserModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,9 @@ public class EventService {
     }
 
     public Page<EventModel> getAllEvents(Pageable pageable) {
-        return eventDao.findAll(pageable);
+        Pageable sortedByLatest = PageRequest.of(pageable.getPageNumber(),
+                pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createdAt"));
+        return eventDao.findAll(sortedByLatest);
     }
 
     public Optional<EventModel> getEventById(Long eventId) {
@@ -79,61 +82,87 @@ public class EventService {
         return eventDao.findAllEvents();
     }
 
-    public Page<EventModel> getFilteredEvents(List<Long> categories, String dateFilter, String priceFilter, String searchQuery, String location, Pageable pageable) {
-        // Check if the categories list is empty and set it to null if it is
-        if (categories != null && categories.isEmpty()) {
-            categories = null;
-        }
+    public Page<EventModel> getFilteredEvents(
+            List<Long> categories,
+            String dateFilter,
+            String priceFilter,
+            String searchQuery,
+            String location,
+            Pageable pageable) {
 
-        LocalDate startDate = null;
-        LocalDate endDate = null;
+        // Normalize categories list
+        categories = (categories != null && categories.isEmpty()) ? null : categories;
 
         // Date filter logic
-        if ("today".equals(dateFilter)) {
-            startDate = LocalDate.now();
-            endDate = LocalDate.now();
-        } else if ("this-week".equals(dateFilter)) {
-            startDate = LocalDate.now();
-            endDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-        } else if ("this-month".equals(dateFilter)) {
-            startDate = LocalDate.now();
-            endDate = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
-        } else if ("within-2-weeks".equals(dateFilter)) {
-            startDate = LocalDate.now();
-            endDate = LocalDate.now().plusWeeks(2);
-        } else if ("within-1-month".equals(dateFilter)) {
-            startDate = LocalDate.now();
-            endDate = LocalDate.now().plusMonths(1);
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+        if (dateFilter != null) {
+            switch (dateFilter) {
+                case "today":
+                    startDate = LocalDate.now();
+                    endDate = LocalDate.now();
+                    break;
+                case "this-week":
+                    startDate = LocalDate.now();
+                    endDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+                    break;
+                case "this-month":
+                    startDate = LocalDate.now();
+                    endDate = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
+                    break;
+                case "within-2-weeks":
+                    startDate = LocalDate.now();
+                    endDate = LocalDate.now().plusWeeks(2);
+                    break;
+                case "within-1-month":
+                    startDate = LocalDate.now();
+                    endDate = LocalDate.now().plusMonths(1);
+                    break;
+                default:
+                    break;
+            }
         }
 
         // Price filter logic
         Double minPrice = null;
         Double maxPrice = null;
-        if ("free".equals(priceFilter)) {
-            minPrice = 0.0;
-            maxPrice = 0.0;
-        } else if ("under-30".equals(priceFilter)) {
-            maxPrice = 30.0;
-        } else if ("between-30-and-100".equals(priceFilter)) {
-            minPrice = 30.0;
-            maxPrice = 100.0;
-        } else if ("over-100".equals(priceFilter)) {
-            minPrice = 100.0;
+        if (priceFilter != null) {
+            switch (priceFilter) {
+                case "free":
+                    minPrice = 0.0;
+                    maxPrice = 0.0;
+                    break;
+                case "under-30":
+                    maxPrice = 30.0;
+                    break;
+                case "between-30-and-100":
+                    minPrice = 30.0;
+                    maxPrice = 100.0;
+                    break;
+                case "over-100":
+                    minPrice = 100.0;
+                    break;
+                default:
+                    break;
+            }
         }
 
-        // Log the calculated filter values
-//        logger.info("Categories: {}", categories);
-//        logger.info("Date range: {} to {}", startDate, endDate);
-//        logger.info("Price range: {} to {}", minPrice, maxPrice);
-//        logger.info("Search Query: {}", searchQuery); // Ensure search query is logged
-//        logger.info("Location: {}", location); // Log location
-
-        // Call DAO method with all parameters
-        Page<EventModel> events = eventDao.findByFilters(categories, searchQuery, startDate, endDate, minPrice, maxPrice, location, pageable);
-
-//        logger.info("Number of events returned: {}", events.getTotalElements());
-
-        return events;
+        // Log the calculated filter values (if logging is needed)
+//    logger.info("Categories: {}", categories);
+//    logger.info("Date range: {} to {}", startDate, endDate);
+//    logger.info("Price range: {} to {}", minPrice, maxPrice);
+//    logger.info("Search Query: {}", searchQuery);
+//    logger.info("Location: {}", location);
+        // Fetch events using DAO method with all filters applied
+        return eventDao.findByFilters(
+                categories,
+                searchQuery,
+                startDate,
+                endDate,
+                minPrice,
+                maxPrice,
+                location,
+                pageable);
     }
 
 }

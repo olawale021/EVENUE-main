@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    private static final String URL = "jdbc:sqlite:/Users/olawale/Desktop/Devs/EVENUE/database.db"; // Replace with your database URL
+    private static final String URL = "jdbc:sqlite:/Users/olawale/Downloads/EVENUE-main/database.db"; // Replace with your database URL
 
     // Private constructor to prevent instantiation
     private DBConnection() {}

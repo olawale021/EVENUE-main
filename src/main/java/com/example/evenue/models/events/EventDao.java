@@ -39,7 +39,8 @@ public interface EventDao extends JpaRepository<EventModel, Long> {
             "AND (COALESCE(:location, NULL) IS NULL OR LOWER(e.location) LIKE LOWER(CONCAT('%', :location, '%'))) " +
             "AND (:startDate IS NULL OR e.eventDate BETWEEN :startDate AND :endDate) " +
             "AND (:minPrice IS NULL OR t.price >= :minPrice) " +
-            "AND (:maxPrice IS NULL OR t.price <= :maxPrice)")
+            "AND (:maxPrice IS NULL OR t.price <= :maxPrice) " +
+            "ORDER BY e.createdAt DESC")
     Page<EventModel> findByFilters(
             @Param("categories") List<Long> categories,
             @Param("search") String search,
